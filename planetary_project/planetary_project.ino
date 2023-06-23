@@ -1,12 +1,14 @@
+// TO install some dependencies https://github.com/me-no-dev/ESPAsyncWebServer
+// https://github.com/me-no-dev/ESPAsyncWebServer/archive/master.zip
+// sketch->include_library->add .zip libray
 //#include <ESP8266WiFi.h>
 #include "ESPAsyncTCP.h"
 #include "ESPAsyncWebServer.h"
 #include "ArduinoJson.h"
 #include "AsyncJson.h"
-#include <PrintStream.h>
 
-#define maxRow 3
-#define maxColumn 3
+#define maxRow 16
+#define maxColumn 16
 
 int demultPos[4] = {
   D0, D1, D2, D3
@@ -250,7 +252,7 @@ int debugging = 1;
 
 int negDemultPin = D8;
 
-const char* ssid = "test"; //"Galaxy A02sf5b8";  //"LYKENET HENRIQUE";
+const char* ssid = "GP Planetary Newtwork"; //"Galaxy A02sf5b8";  //"LYKENET HENRIQUE";
 const char* password = "123456789"; //"stjs8259";     //"19061984";
 AsyncWebServer server(80);
 int status = 0;
@@ -311,7 +313,7 @@ void setup() {
     // digitalWrite(ledPin, status);
     Serial.println(request->params());
     if (request->hasParam("teste"))
-      Serial << request->getParam("teste")->value() << endl;
+      Serial.println(request->getParam("teste")->value());
     
     request->send_P(200, "text/plain", "CONTENTE XD");
     
@@ -319,14 +321,18 @@ void setup() {
 
   AsyncCallbackJsonWebHandler* handler = new AsyncCallbackJsonWebHandler("/change",[](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObject jsonObj = json.as<JsonObject>();
-    int test = jsonObj["status"];
-    Serial << test << endl;
-    if(test == 1) Serial << "ok" << endl;
-    else                Serial << "NOT OK DESGRAMA" << endl;
+    int newStatus = jsonObj["status"];
+    Serial.println(newStatus);
+    // if(newStatus == 1) Serial.println("ok")
+    // else                Serial.println("Error");
     
-    status = test;
+    if (newStatus > 16) {
+      request->send_P(400, "text/plain", "Limit: 16");  
+    } else {
+      status = newStatus;
 
-    request->send_P(200, "text/plain", "okay");
+      request->send_P(200, "text/plain", "okay");
+    }
   });
   server.addHandler(handler);
 
@@ -348,7 +354,7 @@ void loop() {
   for (int i=0; i<maxRow; i++){
 
     for (int j=0;j<maxColumn;j++) {
-      if (debugMatrix[status][i][j]) {
+      if (constelationMatrix[status][i][j]) {
 
         // digitalWrite(negDemultPin, HIGH);
 
